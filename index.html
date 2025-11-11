@@ -10,11 +10,11 @@
     }
 
     ul {
-      list-style: none;         /* 점 없애기 */
+      list-style: none;
       padding: 0;
       margin: 0 auto;
-      display: inline-block;    /* 중앙 정렬 핵심 */
-      text-align: left;         /* 리스트 안은 왼쪽 정렬 */
+      display: inline-block;
+      text-align: left;
     }
 
     li {
@@ -48,16 +48,15 @@
           const type = row.c[2]?.v || "(유형 없음)";
 
           const li = document.createElement("li");
-
           let dateText = "날짜 없음";
-          if (rawDate) {
-            const dateObj = new Date(rawDate);
-            const yyyy = dateObj.getFullYear();
-            const mm = String(dateObj.getMonth() + 1).padStart(2, "0");
-            const dd = String(dateObj.getDate()).padStart(2, "0");
-            dateText = `${yyyy}.${mm}.${dd}`;
 
-            const diff = (dateObj - today) / (1000 * 60 * 60 * 24);
+          if (rawDate && /^\d{4}\/\d{1,2}\/\d{1,2}$/.test(rawDate)) {
+            const [yyyy, mm, dd] = rawDate.split('/').map(Number);
+            dateText = `${yyyy}.${String(mm).padStart(2, "0")}.${String(dd).padStart(2, "0")}`;
+
+            const targetDate = new Date(yyyy, mm - 1, dd);
+            const diff = (targetDate - today) / (1000 * 60 * 60 * 24);
+
             if (diff >= 0 && diff <= 3) {
               li.style.color = "red";
             }
