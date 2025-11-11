@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>수행평가 일정 안내</title>
+</head>
+<body>
+  <center><h1>2-4반 수행평가 일정 안내 모음</h1></center>
+  <ul id="result"></ul>
+
+  <script>
+    const sheetID = "1DdlZ6NbsDBzKhGATyxCVdrU5bCqKPPEDiO4CUGpheGU";
+    const query = encodeURIComponent("SELECT A, B, C OFFSET 1");
+    const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tq=${query}`;
+
+    fetch(url)
+      .then(res => res.text())
+      .then(rep => {
+        const data = JSON.parse(rep.substring(47).slice(0, -2));
+        const rows = data.table.rows;
+        const result = document.getElementById("result");
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // 시간 제거해서 날짜만 비교
+
+        rows.forEach(row => {
+          const subject = row.c[0]?.v || "";
+          const rawDate = row.c[1]?.v || ""; // 날짜 셀
+          const type = row.c[2]?.v || "";
+
+          const li = document.createElement("li");
+          li.textContent = `${subject} ${rawDate} ${type}`;
+
+          if (rawDate) {
+            const targetDate = new Date(rawDate);
+            targetDate.setHours(0, 0, 0, 0); // 시간 제거
+
+            const diffInDays = (targetDate - today) / (1000 * 60 * 60 * 24);
+
+            // 앞으로 0~3일 이내인 경우만 붉게
+            if (diffInDays >= 0 && diffInDays <= 3) {
+              li.style.color = "red";
+            }
+          }
+
+          result.appendChild(li);
+        });
+      })
+      .catch(err => {
+        document.getElementById("result").textContent = "데이터를 불러올 수 없습니다.";
+        console.error(err);
+      });
+  </script>
+</body>
+</html>
