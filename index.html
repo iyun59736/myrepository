@@ -161,6 +161,10 @@ async function loadSheetData() {
 
 function startQuiz() {
   const checked = document.querySelectorAll("#categories input:checked");
+  if (checked.length === 0) {
+    alert("범위를 하나 이상 선택해주세요!");
+    return;
+  }
   const selectedCategories = Array.from(checked).map(cb => cb.value);
 
   filteredQuestions = allData.filter(q => selectedCategories.includes(q.category));
