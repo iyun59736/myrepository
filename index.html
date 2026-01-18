@@ -2,8 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>성민아 공부해</title>
-
+  <title>성민아 공부해</title> 
   <style>
     body {
       font-family: 'Noto Sans KR', sans-serif;
@@ -86,6 +85,19 @@
       display: none;
       font-size: 20px;
     }
+
+    .spreadsheet-link {
+      display: inline-block;
+      margin-top: 10px;
+      font-size: 14px;
+      color: #2563eb;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .spreadsheet-link:hover {
+      color: #1e40af;
+    }
   </style>
 </head>
 
@@ -98,6 +110,11 @@
       <h3>범위 선택</h3>
       <div id="categories"></div>
       <button onclick="startQuiz()">퀴즈 시작</button>
+      <div>
+        <a href="https://docs.google.com/spreadsheets/d/1DdlZ6NbsDBzKhGATyxCVdrU5bCqKPPEDiO4CUGpheGU/edit" target="_blank" class="spreadsheet-link">
+          문제 스프레드시트 열기
+        </a>
+      </div>
     </div>
 
     <div id="quiz">
@@ -124,7 +141,6 @@ async function loadSheetData() {
   const res = await fetch(SHEET_URL);
   const text = await res.text();
   const json = JSON.parse(text.substr(47).slice(0, -2));
-
   const rows = json.table.rows;
 
   allData = rows.map(row => ({
@@ -181,11 +197,18 @@ function showQuestion() {
     btn.onclick = () => {
       if (state !== "answer") return;
 
+      // 정답/오답 시각 효과
+      const buttons = optionsDiv.querySelectorAll("button");
+      buttons.forEach(b => {
+        if (b.innerText === q.answer) {
+          b.style.background = "#86efac"; // 정답 초록색
+        } else if (b.innerText === opt) {
+          b.style.background = "#fca5a5"; // 내가 고른 오답 빨간색
+        }
+      });
+
       if (opt === q.answer) {
-        btn.style.background = "#86efac";
         correctCount++;
-      } else {
-        btn.style.background = "#fca5a5";
       }
 
       state = "next";
