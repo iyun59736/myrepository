@@ -34,33 +34,14 @@ quizFiles.push({
 
     // 4번 문제
     {
-      question: "나는 책을 앍을 것이다. : I ___ read a book.",
+      question: "나는 책을 읽을 것이다. : I ___ read a book.",
       correct: "am going to",
       wrong1: "must",
       wrong2: "have to",
       wrong3: "need to",
       explanation: "나머지 선지들은 [해야 한다]라는 의미다."
-    },
-
-    // 5번 문제
-    {
-      question: "올바른 뜻을 고르시오. : Wake",
-      correct: "잠에서 깨다",
-      wrong1: "관찰하다",
-      wrong2: "잠에 들다",
-      wrong3: "물감을 칠하다",
-      explanation: "선지를 직접 만듦으로써 대조해서 찍기 어렵도록 유도함."
-    },
-
-    // 6번 문제
-    {
-      question: "[잠에서 깨다]를 고르시오.",
-      correct: "wake",
-      wrong1: "lake",
-      wrong2: "bake",
-      wrong3: "take",
-      explanation: "선지를 영어로 제시함으로써 난이도를 상승시킴."
     }
   ]
 });
+
 
