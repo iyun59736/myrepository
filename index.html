@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>성민아 공부해</title> 
+  <meta charset="UTF-8" />
+  <title>생윤퀴즈</title>
+
   <style>
     body {
       font-family: 'Noto Sans KR', sans-serif;
@@ -20,19 +21,31 @@
       border-radius: 16px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       width: 100%;
-      max-width: 500px;
+      max-width: 800px;
       text-align: center;
     }
 
-    h1 {
-      margin-bottom: 20px;
+    #questionNumber { font-weight: bold; margin-bottom: 10px; color: #555; }
+    #question { font-size: 20px; margin-bottom: 10px; }
+    #explanation { font-size: 14px; color: #555; margin-bottom: 20px; }
+
+    #options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
-    #categories label {
-      display: block;
-      margin: 10px 0;
+    #options button {
+      width: 100%;
+      background: #e5e7eb;
+      color: #111;
       font-size: 16px;
     }
+
+    #options button:hover { background: #d1d5db; }
+
+    #resultScreen { display: none; }
+    #resultText { font-size: 28px; font-weight: bold; margin-bottom: 20px; }
 
     button {
       margin-top: 20px;
@@ -45,223 +58,183 @@
       cursor: pointer;
     }
 
-    button:hover {
-      background: #4338ca;
+    button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
     }
 
-    #quiz {
-      display: none;
-    }
-
-    #questionNumber {
-      font-weight: bold;
-      margin-bottom: 10px;
-      color: #555;
-    }
-
-    #question {
-      font-size: 20px;
+    .file-list {
+      text-align: left;
+      margin-top: 20px;
       margin-bottom: 20px;
+      font-size: 18px;
     }
 
-    #options {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    #options button {
-      width: 100%;
-      background: #e5e7eb;
-      color: #111;
-      font-size: 15px;
-    }
-
-    #options button:hover {
-      background: #d1d5db;
-    }
-
-    #result {
-      display: none;
-      font-size: 20px;
-    }
-
-    .spreadsheet-link {
-      display: inline-block;
-      margin-top: 10px;
-      font-size: 14px;
-      color: #2563eb;
-      text-decoration: underline;
+    .file-list label {
+      display: block;
+      margin: 8px 0;
       cursor: pointer;
-    }
-
-    .spreadsheet-link:hover {
-      color: #1e40af;
     }
   </style>
 </head>
 
 <body>
-  <div class="container">
 
-    <h1>퀴즈 제작기</h1>
+  <!-- 시작 화면 -->
+  <div class="container" id="startScreen">
+    <h1>범위 선택</h1>
+    <p>출제 범위를 선택하시오.</p>
 
-    <div id="startScreen">
-      <h3>범위 선택</h3>
-      <div id="categories"></div>
-      <button onclick="startQuiz()">퀴즈 시작</button>
-      <div>
-        <a href="https://docs.google.com/spreadsheets/d/1DdlZ6NbsDBzKhGATyxCVdrU5bCqKPPEDiO4CUGpheGU/edit" target="_blank" class="spreadsheet-link">
-          문제 스프레드시트 열기
-        </a>
-      </div>
-    </div>
+    <div id="fileSelect" class="file-list"></div>
+
+    <button id="startBtn" disabled>시작하기</button>
+  </div>
+
+  <!-- 퀴즈 화면 -->
+  <div class="container" id="quizContainer" style="display:none;">
+    <h1>퀴즈</h1>
 
     <div id="quiz">
       <div id="questionNumber"></div>
       <div id="question"></div>
+      <div id="explanation"></div>
       <div id="options"></div>
       <button onclick="nextStep()">다음</button>
     </div>
 
-    <div id="result"></div>
-
+    <div id="resultScreen">
+      <div id="resultText"></div>
+      <button onclick="location.reload()">처음으로</button>
+    </div>
   </div>
 
-<script>
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/1DdlZ6NbsDBzKhGATyxCVdrU5bCqKPPEDiO4CUGpheGU/gviz/tq?tqx=out:json";
+  <!-- 전역 등록 배열 -->
+  <script>
+    const quizFiles = [];
+  </script>
 
-let allData = [];
-let filteredQuestions = [];
-let currentQuestion = 0;
-let correctCount = 0;
-let state = "answer";
+  <!-- 문제 파일 ------------------------------------------------------------>
+  <script src="윤리학.js"></script>
+  <script src="유교.js"></script>
+  <script src="도교.js"></script>
+  <script src="불교.js"></script>
 
-async function loadSheetData() {
-  const res = await fetch(SHEET_URL);
-  const text = await res.text();
-  const json = JSON.parse(text.substr(47).slice(0, -2));
-  const rows = json.table.rows;
+  <!-- 퀴즈 로직 -->
+  <script>
+    let allData = [];
+    let currentQuestion = 0;
+    let correctCount = 0;
+    let state = "answer";
 
-  allData = rows.map(row => ({
-    question: row.c[0]?.v,
-    answer: row.c[1]?.v,
-    category: row.c[2]?.v
-  })).filter(q => q.question && q.answer && q.category);
+    const fileSelectDiv = document.getElementById("fileSelect");
+    const startBtn = document.getElementById("startBtn");
 
-  const uniqueCategories = [...new Set(allData.map(q => q.category))];
-  const catDiv = document.getElementById("categories");
+    // 체크박스 자동 생성
+    quizFiles.forEach((file, index) => {
+      const label = document.createElement("label");
 
-  uniqueCategories.forEach(cat => {
-    const label = document.createElement("label");
-    label.innerHTML = `<input type="checkbox" value="${cat}"> ${cat}`;
-    catDiv.appendChild(label);
-  });
-}
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = true;
+      checkbox.dataset.index = index;
+      checkbox.onchange = updateStartButton;
 
-function startQuiz() {
-  const checked = document.querySelectorAll("#categories input:checked");
-  if (checked.length === 0) {
-    alert("범위 골라.");
-    return;
-  }
-  const selectedCategories = Array.from(checked).map(cb => cb.value);
+      label.appendChild(checkbox);
+      label.append(" " + file.name);
 
-  filteredQuestions = allData.filter(q => selectedCategories.includes(q.category));
-  shuffleArray(filteredQuestions);
+      fileSelectDiv.appendChild(label);
+    });
 
-  currentQuestion = 0;
-  correctCount = 0;
-  state = "answer";
+    updateStartButton();
 
-  document.getElementById("startScreen").style.display = "none";
-  document.getElementById("quiz").style.display = "block";
-  document.getElementById("result").style.display = "none";
+    function updateStartButton() {
+      const checked = document.querySelectorAll("#fileSelect input:checked");
+      startBtn.disabled = checked.length === 0;
+    }
 
-  showQuestion();
-}
+    // 시작 버튼 클릭
+    startBtn.onclick = () => {
+      const checked = document.querySelectorAll("#fileSelect input:checked");
+      allData = [];
 
-function showQuestion() {
-  const q = filteredQuestions[currentQuestion];
-
-  document.getElementById("questionNumber").innerText =
-    `${currentQuestion + 1} / ${filteredQuestions.length}`;
-
-  document.getElementById("question").innerText = q.question;
-
-  const optionsDiv = document.getElementById("options");
-  optionsDiv.innerHTML = "";
-
-  const options = generateOptions(q.answer);
-
-  options.forEach(opt => {
-    const btn = document.createElement("button");
-    btn.innerText = opt;
-
-    btn.onclick = () => {
-      if (state !== "answer") return;
-
-      // 정답/오답 시각 효과
-      const buttons = optionsDiv.querySelectorAll("button");
-      buttons.forEach(b => {
-        if (b.innerText === q.answer) {
-          b.style.background = "#86efac"; // 정답 초록색
-        } else if (b.innerText === opt) {
-          b.style.background = "#fca5a5"; // 내가 고른 오답 빨간색
-        }
+      checked.forEach(cb => {
+        const idx = cb.dataset.index;
+        allData = allData.concat(quizFiles[idx].data);
       });
 
-      if (opt === q.answer) {
-        correctCount++;
-      }
+      shuffleArray(allData);
 
-      state = "next";
+      document.getElementById("startScreen").style.display = "none";
+      document.getElementById("quizContainer").style.display = "block";
+
+      showQuestion();
     };
 
-    optionsDiv.appendChild(btn);
-  });
-}
+    // 퀴즈 로직
+    function showQuestion() {
+      const q = allData[currentQuestion];
 
-function nextStep() {
-  if (state === "answer") return;
+      const options = [
+        { text: q.correct, isCorrect: true },
+        { text: q.wrong1, isCorrect: false },
+        { text: q.wrong2, isCorrect: false },
+        { text: q.wrong3, isCorrect: false }
+      ];
+      shuffleArray(options);
 
-  currentQuestion++;
+      document.getElementById("questionNumber").innerText =
+        `${currentQuestion + 1} / ${allData.length}`;
+      document.getElementById("question").innerText = q.question;
+      document.getElementById("explanation").innerText = "";
 
-  if (currentQuestion >= filteredQuestions.length) {
-    document.getElementById("quiz").style.display = "none";
-    document.getElementById("result").style.display = "block";
-    document.getElementById("startScreen").style.display = "block";
+      const optionsDiv = document.getElementById("options");
+      optionsDiv.innerHTML = "";
 
-    document.getElementById("result").innerText =
-      `결과: ${correctCount} / ${filteredQuestions.length} 정답`;
+      options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.innerText = opt.text;
 
-    return;
-  }
+        btn.onclick = () => {
+          if (state !== "answer") return;
 
-  state = "answer";
-  showQuestion();
-}
+          const buttons = optionsDiv.querySelectorAll("button");
+          buttons.forEach(b => {
+            if (b.innerText === q.correct) b.style.background = "#86efac";
+            else if (b.innerText === opt.text) b.style.background = "#fca5a5";
+          });
 
-function generateOptions(correct) {
-  const pool = filteredQuestions.map(q => q.answer).filter(a => a !== correct);
-  shuffleArray(pool);
+          if (opt.isCorrect) correctCount++;
+          document.getElementById("explanation").innerText = q.explanation;
+          state = "next";
+        };
 
-  const choices = pool.slice(0, 3);
-  choices.push(correct);
+        optionsDiv.appendChild(btn);
+      });
+    }
 
-  shuffleArray(choices);
-  return choices;
-}
+    function nextStep() {
+      if (state === "answer") return;
 
-function shuffleArray(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-}
+      currentQuestion++;
+      if (currentQuestion >= allData.length) {
+        document.getElementById("quiz").style.display = "none";
+        document.getElementById("resultScreen").style.display = "block";
+        document.getElementById("resultText").innerText =
+          `${correctCount} / ${allData.length}`;
+        return;
+      }
 
-loadSheetData();
-</script>
+      state = "answer";
+      showQuestion();
+    }
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+  </script>
 
 </body>
 </html>
