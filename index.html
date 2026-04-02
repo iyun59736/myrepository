@@ -43,8 +43,8 @@
 let db = [
   // 여기에 직접 단어 세트를 추가하면 됩니다.
   // 예시:
-  { word: "apple", meaning: "사과", pos: "명사", lastDate: null, count: 0, correct: 0, rate: 0, lastCheck: false, need: true },
-  { word: "run", meaning: "달리다", pos: "동사", lastDate: null, count: 0, correct: 0, rate: 0, lastCheck: false, need: true }
+  { word: "apple", meaning: "사과", lastDate: null, count: 0, correct: 0, rate: 0, lastCheck: false, need: true },
+  { word: "run", meaning: "달리다", lastDate: null, count: 0, correct: 0, rate: 0, lastCheck: false, need: true }
 ];
 
 let stats = { todayCount: 0, lastDate: "" };
@@ -55,7 +55,6 @@ const todayStr = new Date().toDateString();
 if (stats.lastDate !== todayStr) { stats.todayCount = 0; stats.lastDate = todayStr; }
 
 const wordEl = document.getElementById('word');
-const posEl = document.getElementById('pos');
 const badgeEl = document.getElementById('badge');
 const inputEl = document.getElementById('inputBox');
 const btnEl = document.getElementById('mainBtn');
