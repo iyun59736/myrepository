@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>성민아 공부해</title>
+  <style>
+    :root { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --primary: #3b82f6; --accent: #10b981; --error: #ef4444; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; text-align: center; padding: 20px; margin:0; -webkit-touch-callout:none; }
+    .container { max-width: 500px; margin: auto; padding: 25px; background: var(--card); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    
+    #badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; margin-bottom: 15px; }
+    .badge-need { background: #f59e0b; color: #000; }
+    .badge-done { background: var(--accent); color: #fff; }
+    .badge-all-done { background: #f97316; color: #fff; }
+
+    #word { font-size: 2.5rem; font-weight: bold; margin: 10px 0; min-height: 3.5rem; word-break: break-all; display: flex; align-items: center; justify-content: center; }
+    
+    input[type="text"] { width: 90%; padding: 14px; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 1.1rem; margin-bottom: 20px; outline: none; transition: 0.3s; }
+    input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); }
+    button { padding: 14px 30px; font-size: 1.1rem; border-radius: 12px; border: none; cursor: pointer; background: var(--primary); color: white; font-weight: bold; width: 100%; max-width: 200px; }
+    
+    .correct { color: #4ade80 !important; }
+    .wrong { color: #f87171 !important; }
+    #status { margin-top: 25px; font-size: 0.9rem; color: #94a3b8; border-top: 1px solid #334155; padding-top: 15px; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div id="badge"></div>
+    <div id="word">단어를 추가하시오.</div>
+    
+    <input type="text" id="inputBox" placeholder="정답 입력..." autocomplete="off" autocapitalize="off">
+    <br>
+    <button id="mainBtn">확인</button>
+
+    <div id="status">오늘 학습량: <span id="j4Count">0</span></div>
+  </div>
+
+<script>
+const ALL_DONE_MESSAGE = "수고했어요!";
+
+// ✅ LocalStorage에서 진행 상황 불러오기
+let saved = localStorage.getItem("progress");
+let db = saved ? JSON.parse(saved).db : [
+  {
+    "word": "symbolic",
+    "meaning": "상징적인",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "grasp",
+    "meaning": "붙잡다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "accumulate",
+    "meaning": "축적하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "from A to B",
+    "meaning": "A에서 B로",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "restrict",
+    "meaning": "제한하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "sympathy",
+    "meaning": "동정심, 공감, 강조",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "verbal",
+    "meaning": "언어적인",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "cause",
+    "meaning": "원인, 초래하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "international",
+    "meaning": "국제적인",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "employ",
+    "meaning": "고용하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "environment",
+    "meaning": "환경",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "unlike",
+    "meaning": "와는 다르게",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "regulation",
+    "meaning": "규제",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "narrative",
+    "meaning": "이야기",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "keep ",
+    "meaning": "유지하다, 막다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "prevent",
+    "meaning": "예방하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "proper",
+    "meaning": "적절한",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "recycle",
+    "meaning": "재활용, 재활용하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "empathy",
+    "meaning": "동정심, 공감, 강조",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "bare",
+    "meaning": "맨",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "ashamed",
+    "meaning": "부끄러운",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "delightful",
+    "meaning": "기쁜",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "spatial",
+    "meaning": "공간적인",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "impair",
+    "meaning": "손상시키다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "benefit",
+    "meaning": "이익",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "suffer",
+    "meaning": "고통받다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "damage",
+    "meaning": "피해를 주다, 피해",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "treat",
+    "meaning": "대하다, 간식",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "withdraw",
+    "meaning": "철회하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "regulate",
+    "meaning": "규제하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "rural",
+    "meaning": "시골의, 농촌의",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "restriction",
+    "meaning": "제한",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "reuse",
+    "meaning": "재사용하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "national",
+    "meaning": "국가의",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "remove",
+    "meaning": "제거하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "diminish",
+    "meaning": "줄이다, 손상시키다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "predict",
+    "meaning": "예측하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "transfer",
+    "meaning": "이송, 이송하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "rise",
+    "meaning": "늘다, 오르다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "carbon dioxide",
+    "meaning": "이산화탄소",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "transport",
+    "meaning": "이동",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "reduce",
+    "meaning": "줄이다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "transparent",
+    "meaning": "투명한, 명백한",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "establish",
+    "meaning": "설립하다, 만들다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "surface",
+    "meaning": "지표면, 겉면",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "verify",
+    "meaning": "입증하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "properly",
+    "meaning": "적절히",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "essence",
+    "meaning": "본질",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "decrease",
+    "meaning": "줄다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "increase",
+    "meaning": "늘다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "presevation",
+    "meaning": "보존",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "environmental",
+    "meaning": "환경적인",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "prediction",
+    "meaning": "예측",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "make sense",
+    "meaning": "말이 되다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "pollute",
+    "meaning": "오염시키다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "contaminate",
+    "meaning": "오염시키다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "transition",
+    "meaning": "전환",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "thesis",
+    "meaning": "의제",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "create",
+    "meaning": "창조하다, 만들다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "endorse",
+    "meaning": "지지하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "undermine",
+    "meaning": "훼손하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "conserve",
+    "meaning": "보존하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "sustainable",
+    "meaning": "지속가능한",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "inspite of",
+    "meaning": "에도 불구하고",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "import",
+    "meaning": "수입, 수입하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "empathize",
+    "meaning": "공감하다, 강조하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "pollution",
+    "meaning": "오염",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "despite",
+    "meaning": "에도 불구하고",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "conservation",
+    "meaning": "보존",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "in order to",
+    "meaning": "하기 위해",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "nationality",
+    "meaning": "국적",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "example",
+    "meaning": "예시",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "vulnerable",
+    "meaning": "취약한",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "urban",
+    "meaning": "도시의",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "destroy",
+    "meaning": "부수다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "local",
+    "meaning": "지역의",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "transit",
+    "meaning": "통로, 운송",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "occupy",
+    "meaning": "헌신하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "eliminate",
+    "meaning": "제거하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "significant",
+    "meaning": "중요한, 엄청난",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "like",
+    "meaning": "처럼, 좋아하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "by ~ing",
+    "meaning": "함으로써",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "sustain",
+    "meaning": "지속하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "reusable",
+    "meaning": "재사용 가능한",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "symbol",
+    "meaning": "상징",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "passion",
+    "meaning": "열정",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "endure",
+    "meaning": "견디다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "contamination",
+    "meaning": "오엄",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "nation",
+    "meaning": "국가",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "export",
+    "meaning": "수출, 수출하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "depressed",
+    "meaning": "우울한",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "quarter",
+    "meaning": "4분의 1, 부분",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "result",
+    "meaning": "결과",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "language",
+    "meaning": "언어",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "transmit",
+    "meaning": "전송하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "preserve",
+    "meaning": "보존하다",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "anxiety",
+    "meaning": "긴장감, 불안",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "sensitive",
+    "meaning": "예민한",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "instance",
+    "meaning": "예시",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  },
+  {
+    "word": "through",
+    "meaning": "통해서",
+    "lastDate": null,
+    "count": 0,
+    "correct": 0,
+    "rate": 0,
+    "lastCheck": false,
+    "need": true
+  }
+];
+let stats = saved ? JSON.parse(saved).stats : { todayCount: 0, lastDate: "" };
+
+let currentIndex = 0;
+let mode = "QUIZ";
+
+const todayStr = new Date().toDateString();
+if (stats.lastDate !== todayStr) { stats.todayCount = 0; stats.lastDate = todayStr; }
+
+const wordEl = document.getElementById('word');
+const badgeEl = document.getElementById('badge');
+const inputEl = document.getElementById('inputBox');
+const btnEl = document.getElementById('mainBtn');
+const j4El = document.getElementById('j4Count');
+
+function isAllDone() {
+    return db.length > 0 && db.every(item => item.need === false);
+}
+
+function reorder() {
+    db.sort((a, b) => {
+        if (a.need !== b.need) return a.need ? -1 : 1;
+        if (a.lastCheck !== b.lastCheck) return a.lastCheck ? 1 : -1;
+        if (!a.lastDate && b.lastDate) return -1;
+        if (a.lastDate && !b.lastDate) return 1;
+        return new Date(a.lastDate) - new Date(b.lastDate);
+    });
+}
+
+function loadQuestion() {
+    if (db.length === 0) {
+        wordEl.innerText = "단어를 추가하시오.";
+        return;
+    }
+    reorder();
+    currentIndex = 0;
+    const item = db[currentIndex];
+    wordEl.innerText = item.word;
+    wordEl.className = "";
+    inputEl.value = "";
+    inputEl.style.display = "inline-block";
+    btnEl.innerText = "확인";
+    j4El.innerText = stats.todayCount;
+
+    if (isAllDone()) {
+        badgeEl.innerText = ALL_DONE_MESSAGE;
+        badgeEl.className = "badge-all-done";
+    } else {
+        badgeEl.innerText = item.need ? "학습 필요" : "학습 완료";
+        badgeEl.className = item.need ? "badge-need" : "badge-done";
+    }
+
+    mode = "QUIZ";
+    inputEl.focus();
+}
+
+function submitAnswer() {
+    const item = db[currentIndex];
+    const userAns = inputEl.value.replace(/[~\- ]/g, "").toLowerCase();
+    const answers = item.meaning.split(",").map(s => s.trim().replace(/ /g, "").toLowerCase());
+    const isCorrect = userAns !== "" && userAns.split(",").every(v => answers.includes(v));
+
+    item.count++;
+    if (isCorrect) {
+        item.correct++; item.lastCheck = true; item.need = false; stats.todayCount++;
+    } else {
+        item.lastCheck = false; item.need = true;
+    }
+    item.lastDate = new Date().toISOString();
+    item.rate = Math.round((item.correct / item.count * 100) * 10) / 10;
+
+    wordEl.innerText = item.meaning;
+    wordEl.className = isCorrect ? "correct" : "wrong";
+    
+    mode = "REVIEW";
+    btnEl.innerText = "다음 문제";
+    inputEl.style.display = "none";
+
+    // ✅ 진행 상황 저장
+    localStorage.setItem("progress", JSON.stringify({ db: db, stats: stats }));
+}
+
+btnEl.onclick = () => { 
+    if (mode === "QUIZ") submitAnswer(); 
+    else loadQuestion(); 
+};
+
+inputEl.onkeypress = (e) => { if(e.key === 'Enter') btnEl.onclick(); };
+
+window.onload = loadQuestion;
+</script>
+</body>
+</html>
