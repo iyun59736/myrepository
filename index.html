@@ -12,9 +12,9 @@
     #badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; margin-bottom: 15px; }
     .badge-need { background: #f59e0b; color: #000; }
     .badge-done { background: var(--accent); color: #fff; }
+    .badge-all-done { background: #f97316; color: #fff; } /* 추가 */
 
     #word { font-size: 2.5rem; font-weight: bold; margin: 10px 0; min-height: 3.5rem; word-break: break-all; display: flex; align-items: center; justify-content: center; }
-    #pos { color: #94a3b8; margin-bottom: 25px; height: 1.2rem; font-style: italic; }
     
     input[type="text"] { width: 90%; padding: 14px; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 1.1rem; margin-bottom: 20px; outline: none; transition: 0.3s; }
     input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); }
@@ -30,7 +30,6 @@
   <div class="container">
     <div id="badge"></div>
     <div id="word">단어를 추가하시오.</div>
-    <div id="pos"></div>
     
     <input type="text" id="inputBox" placeholder="정답 입력..." autocomplete="off" autocapitalize="off">
     <br>
@@ -40,11 +39,11 @@
   </div>
 
 <script>
+// ✅ 전체 완료 시 표시할 문구
+const ALL_DONE_MESSAGE = "수고했어요!";
+
 let db = [
-  // 여기에 직접 단어 세트를 추가하면 됩니다.
-  // 예시:
-  { word: "apple", meaning: "사과", lastDate: null, count: 0, correct: 0, rate: 0, lastCheck: false, need: true },
-  { word: "run", meaning: "달리다", lastDate: null, count: 0, correct: 0, rate: 0, lastCheck: false, need: true }
+  //예시 : { word: "apple", meaning: "사과", lastDate: null, count: 0, correct: 0, rate: 0, lastCheck: false, need: true },
 ];
 
 let stats = { todayCount: 0, lastDate: "" };
@@ -59,6 +58,11 @@ const badgeEl = document.getElementById('badge');
 const inputEl = document.getElementById('inputBox');
 const btnEl = document.getElementById('mainBtn');
 const j4El = document.getElementById('j4Count');
+
+// ✅ 전체 완료 여부 체크
+function isAllDone() {
+    return db.length > 0 && db.every(item => item.need === false);
+}
 
 function reorder() {
     db.sort((a, b) => {
@@ -80,13 +84,20 @@ function loadQuestion() {
     const item = db[currentIndex];
     wordEl.innerText = item.word;
     wordEl.className = "";
-    posEl.innerText = item.pos ? "(" + item.pos + ")" : "";
     inputEl.value = "";
     inputEl.style.display = "inline-block";
     btnEl.innerText = "확인";
     j4El.innerText = stats.todayCount;
-    badgeEl.innerText = item.need ? "학습 필요" : "학습 완료";
-    badgeEl.className = item.need ? "badge-need" : "badge-done";
+
+    // ✅ badge 처리
+    if (isAllDone()) {
+        badgeEl.innerText = ALL_DONE_MESSAGE;
+        badgeEl.className = "badge-all-done";
+    } else {
+        badgeEl.innerText = item.need ? "학습 필요" : "학습 완료";
+        badgeEl.className = item.need ? "badge-need" : "badge-done";
+    }
+
     mode = "QUIZ";
     inputEl.focus();
 }
